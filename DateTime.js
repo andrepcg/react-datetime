@@ -6,14 +6,13 @@ var assign = require('object-assign'),
 	MonthsView = require('./src/MonthsView'),
 	YearsView = require('./src/YearsView'),
 	TimeView = require('./src/TimeView'),
+	onClickOutside = require('./src/onClickOutside'),
 	moment = require('moment')
 ;
 
 var TYPES = React.PropTypes;
-var Datetime = React.createClass({
-	mixins: [
-		require('./src/onClickOutside')
-	],
+var Datetime = onClickOutside(React.createClass({
+
 	viewComponents: {
 		days: DaysView,
 		months: MonthsView,
@@ -26,6 +25,7 @@ var Datetime = React.createClass({
 		onFocus: TYPES.func,
 		onBlur: TYPES.func,
 		onChange: TYPES.func,
+		onViewChange: TYPES.func,
 		locale: TYPES.string,
 		input: TYPES.bool,
 		// dateFormat: TYPES.string | TYPES.bool,
@@ -33,6 +33,7 @@ var Datetime = React.createClass({
 		inputProps: TYPES.object,
 		timeConstraints: TYPES.object,
 		viewMode: TYPES.oneOf(['years', 'months', 'days', 'time']),
+		currentView: TYPES.oneOf(['years', 'months', 'days', 'time']),
 		isValidDate: TYPES.func,
 		open: TYPES.bool,
 		strictParsing: TYPES.bool,
@@ -50,6 +51,7 @@ var Datetime = React.createClass({
 			onFocus: nof,
 			onBlur: nof,
 			onChange: nof,
+			onViewChange: nof,
 			timeFormat: true,
 			timeConstraints: {},
 			dateFormat: true,
@@ -170,6 +172,7 @@ var Datetime = React.createClass({
 			}
 		}
 
+
 		this.setState( update );
 	},
 
@@ -202,6 +205,7 @@ var Datetime = React.createClass({
 		var me = this;
 		return function(){
 			me.setState({ currentView: view });
+			me.props.onViewChange(view);
 		};
 	},
 
@@ -368,7 +372,8 @@ var Datetime = React.createClass({
 	},
 
 	render: function() {
-		var Component = this.viewComponents[ this.state.currentView ],
+		var currentView = this.props.currentView || this.state.currentView;
+		var Component = this.viewComponents[ currentView ],
 			DOM = React.DOM,
 			className = 'rdt' + (this.props.className ?
                   ( Array.isArray( this.props.className ) ?
@@ -390,7 +395,7 @@ var Datetime = React.createClass({
 			className += ' rdtStatic';
 		}
 
-		if ( this.state.open )
+		if ( this.props.opened || this.state.open )
 			className += ' rdtOpen';
 
 		return DOM.div({className: className}, children.concat(
@@ -400,7 +405,7 @@ var Datetime = React.createClass({
 			)
 		));
 	}
-});
+}));
 
 // Make moment accessible through the Datetime class
 Datetime.moment = moment;
